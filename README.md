@@ -32,7 +32,18 @@ cp .env.example .env   # затем заполните значения
 .venv/bin/python -m pytest
 ```
 
-## Деплой на VPS (systemd)
+## Запуск в Docker
+
+```bash
+cp .env.example .env   # заполнить значения
+docker compose up -d --build
+```
+
+База хранится на хосте в `./data/bot.db` (примонтированный том), поэтому
+пересборка и перезапуск контейнера данные не трогают. Логи:
+`docker compose logs -f`.
+
+## Деплой на VPS (systemd, без Docker)
 
 ```bash
 sudo useradd -r -m -d /opt/aki-bot akibot
