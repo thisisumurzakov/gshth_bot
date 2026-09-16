@@ -11,8 +11,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from bot import keyboards
 from bot.db import repo
 from bot.db.models import User
-from bot.handlers.flows import send_language_prompt, send_next_step
-from bot.locales import LANGS, t
+from bot.handlers.flows import CHOOSE_LANGUAGE_PROMPT, send_language_prompt, send_next_step
+from bot.locales import LANGS, all_variants, t
 from bot.services.timeutil import TASHKENT, parse_birth_date
 
 router = Router(name="registration")
@@ -42,11 +42,17 @@ async def ask_profile(bot: Bot, user: User, state: FSMContext) -> None:
     await state.set_state(Registration.birth_date)
     await state.set_data({"language": user.language})
     text = t(user.language, "profile_update_intro") + "\n\n" + t(user.language, "ask_birth_date")
-    await bot.send_message(user.tg_id, text, reply_markup=ReplyKeyboardRemove())
+    # Язык в профиле старого пользователя мог быть выбран давно — даём сменить его,
+    # не выходя из анкеты.
+    await bot.send_message(
+        user.tg_id, text, reply_markup=keyboards.change_language_inline_kb(user.language)
+    )
 
 
 # --- Недозаполненный профиль (в т.ч. пользователи, зарегистрированные до появления
 # этих полей): любое обращение к боту сначала ведёт в анкету. ---
+
+LANGUAGE_CALLBACK = (F.data == "change_lang") | F.data.startswith("setlang:")
 
 
 @router.message(IncompleteProfile(), ~StateFilter(Registration))
@@ -54,10 +60,22 @@ async def gate_message(message: Message, state: FSMContext, user: User) -> None:
     await ask_profile(message.bot, user, state)
 
 
-@router.callback_query(IncompleteProfile(), ~StateFilter(Registration))
+@router.callback_query(IncompleteProfile(), ~StateFilter(Registration), ~LANGUAGE_CALLBACK)
 async def gate_callback(callback: CallbackQuery, state: FSMContext, user: User) -> None:
     await callback.answer()
     await ask_profile(callback.bot, user, state)
+
+
+@router.message(
+    StateFilter(Registration.birth_date, Registration.workplace),
+    F.text.in_(all_variants("btn_change_language")),
+)
+async def change_language_during_profile(message: Message) -> None:
+    """Кнопка «🌐» из меню посреди анкеты — это смена языка, а не ответ на вопрос."""
+    await message.answer(
+        CHOOSE_LANGUAGE_PROMPT,
+        reply_markup=keyboards.language_kb(),
+    )
 
 
 # --- Регистрация ---
@@ -79,7 +97,16 @@ async def cb_set_language(
         # Смена языка уже зарегистрированным пользователем.
         user.language = lang
         await session.commit()
-        await send_next_step(callback.bot, user, prefix=t(lang, "language_changed"))
+        if user.profile_complete:
+            await send_next_step(callback.bot, user, prefix=t(lang, "language_changed"))
+            return
+        # Анкета не заполнена — задаём текущий вопрос заново, уже на новом языке.
+        await callback.message.answer(t(lang, "language_changed"))
+        if await state.get_state() == Registration.workplace.state:
+            await state.update_data(language=lang)
+            await callback.message.answer(t(lang, "ask_workplace"))
+        else:
+            await ask_profile(callback.bot, user, state)
         return
     await state.update_data(language=lang)
     await state.set_state(Registration.full_name)

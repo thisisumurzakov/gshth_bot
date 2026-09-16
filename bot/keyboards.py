@@ -22,6 +22,14 @@ def language_kb() -> InlineKeyboardMarkup:
     )
 
 
+def change_language_inline_kb(lang: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text=t(lang, "btn_change_language"), callback_data="change_lang")]
+        ]
+    )
+
+
 def contact_kb(lang: str) -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[[KeyboardButton(text=t(lang, "btn_share_contact"), request_contact=True)]],

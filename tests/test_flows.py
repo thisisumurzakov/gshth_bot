@@ -163,3 +163,40 @@ async def test_admin_creates_project_with_photo(harness, session_factory):
     await h.send(3, "/new_project")
     async with session_factory() as s:
         assert len(await repo.list_projects(s, only_active=False)) == 1
+
+
+async def test_language_can_be_changed_during_profile_questions(harness, session_factory):
+    h = harness
+    async with session_factory() as s:
+        s.add(
+            User(
+                tg_id=7, full_name="Old Ru", phone="+998907", language="ru",
+                subscribed_at=utcnow(),
+            )
+        )
+        await s.commit()
+
+    # Вопрос приходит на языке из профиля — с кнопкой смены языка.
+    calls = await h.send(7, "/start")
+    assert "дату рождения" in calls[-1].text
+    assert calls[-1].reply_markup.inline_keyboard[0][0].callback_data == "change_lang"
+
+    out = sent_texts(await h.press(7, "change_lang"))
+    assert "Сменить язык" in out
+    out = sent_texts(await h.press(7, "setlang:uz"))
+    assert "Til o'zgartirildi" in out and "Tug'ilgan sanangizni" in out
+    assert "menyudan" not in out  # анкету не пропускаем
+
+    # Смена языка на втором вопросе не сбрасывает уже введённую дату.
+    assert "Qayerda o'qiysiz" in sent_texts(await h.send(7, "15.03.2002"))
+    out = sent_texts(await h.send(7, "🌐 Tilni o'zgartirish"))
+    assert "Choose a language" in out and "aniqlanmadi" not in out
+    out = sent_texts(await h.press(7, "setlang:en"))
+    assert "Language changed" in out and "study or work" in out
+    out = sent_texts(await h.send(7, "Inha University"))
+    assert "details are saved" in out
+
+    async with session_factory() as s:
+        user = await repo.get_user(s, 7)
+    assert user.language == "en"
+    assert user.birth_date == date(2002, 3, 15) and user.workplace == "Inha University"

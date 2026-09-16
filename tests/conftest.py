@@ -1,10 +1,16 @@
 import os
 
 # Роутеры читают настройки при импорте — задаём их до импорта модулей бота.
-os.environ.setdefault("BOT_TOKEN", "42:TEST")
-os.environ.setdefault("MAIN_CHANNEL_ID", "-1001")
-os.environ.setdefault("MAIN_CHANNEL_LINK", "https://t.me/test")
-os.environ.setdefault("ADMIN_IDS", "999")
+os.environ["BOT_TOKEN"] = "42:TEST"
+os.environ["MAIN_CHANNEL_ID"] = "-1001"
+os.environ["MAIN_CHANNEL_LINK"] = "https://t.me/test"
+os.environ["ADMIN_IDS"] = "999"
+os.environ.pop("APPLICATIONS_CHAT_ID", None)
+
+from bot.config import Settings  # noqa: E402
+
+# Локальный .env разработчика (с настоящими ID чатов) не должен влиять на тесты.
+Settings.model_config["env_file"] = None
 
 import pytest  # noqa: E402
 import pytest_asyncio  # noqa: E402
