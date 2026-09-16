@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import get_settings
 from bot.db import repo
-from bot.services.broadcast import broadcast_copy, copy_to_one
+from bot.locales import t
+from bot.services.broadcast import broadcast_copy, broadcast_texts, copy_to_one
 
 router = Router(name="admin")
 router.message.filter(F.from_user.id.in_(get_settings().admin_id_list))
@@ -42,12 +43,45 @@ async def cmd_cancel(message: Message, state: FSMContext) -> None:
     await message.answer("Отменено.")
 
 
+@router.message(Command("admin"))
+async def cmd_admin(message: Message) -> None:
+    await message.answer(
+        "Админ-команды:\n"
+        "/users — зарегистрированные пользователи, их заявки и файлы "
+        "(поиск: /users Иванов или /users 901234567)\n"
+        "/new_project — создать проект\n"
+        "/projects — проекты: редактирование, заявки, выгрузка\n"
+        "/new_contest — создать конкурс\n"
+        "/contests — конкурсы: итоги, редактирование, выгрузка\n"
+        "/broadcast — рассылка всем пользователям\n"
+        "/message <tg_id или телефон> — сообщение пользователю\n"
+        "/ask_profile — напомнить дополнить профиль тем, кто не указал новые данные\n"
+        "/stats — статистика\n"
+        "/cancel — отменить текущую операцию"
+    )
+
+
 @router.message(Command("stats"))
 async def cmd_stats(message: Message, session: AsyncSession) -> None:
-    total, completed = await repo.stats(session)
+    total, subscribed, complete = await repo.stats(session)
     await message.answer(
-        f"👥 Зарегистрировано: {total}\n🏆 Получили доступ в закрытый канал: {completed}"
+        f"👥 Зарегистрировано: {total}\n"
+        f"📢 Подтвердили подписку: {subscribed}\n"
+        f"📝 Заполнили профиль (дата рождения, учёба/работа): {complete}"
     )
+
+
+@router.message(Command("ask_profile"))
+async def cmd_ask_profile(message: Message, session: AsyncSession) -> None:
+    users = await repo.users_with_incomplete_profile(session)
+    if not users:
+        await message.answer("Все пользователи уже заполнили профиль ✅")
+        return
+    await message.answer(f"Отправляю напоминание {len(users)} пользователям…")
+    sent, failed = await broadcast_texts(
+        message.bot, {u.tg_id: t(u.language, "profile_reminder") for u in users}
+    )
+    await message.answer(f"Готово. Доставлено: {sent}, не доставлено: {failed}.")
 
 
 @router.message(Command("broadcast"))

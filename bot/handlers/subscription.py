@@ -5,9 +5,9 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import get_settings
-from bot.db.models import User
+from bot.db.models import User, utcnow
+from bot.handlers.flows import send_menu
 from bot.locales import t
-from bot.services.invites import create_personal_link
 
 router = Router(name="subscription")
 
@@ -27,11 +27,10 @@ async def cb_check_subscription(
         await callback.answer()
         return
 
-    settings = get_settings()
     lang = user.language
     try:
         member = await callback.bot.get_chat_member(
-            settings.main_channel_id, user.tg_id
+            get_settings().main_channel_id, user.tg_id
         )
         subscribed = member.status in SUBSCRIBED
     except TelegramBadRequest:
@@ -42,11 +41,9 @@ async def cb_check_subscription(
         return
 
     await callback.answer()
-    if user.invite_link is None:
-        user.invite_link = await create_personal_link(
-            callback.bot, settings.main_channel_id, user.tg_id
-        )
+    prefix = None
+    if user.subscribed_at is None:
+        user.subscribed_at = utcnow()
         await session.commit()
-    await callback.message.answer(
-        t(lang, "invite_ready", link=user.invite_link, goal=settings.referral_goal)
-    )
+        prefix = t(lang, "subscribed_ok")
+    await send_menu(callback.bot, user, prefix)

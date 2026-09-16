@@ -4,28 +4,47 @@ TEXTS = {
     "ask_phone": "Share your phone number with the button below or type it manually (e.g. +998901234567).",
     "btn_share_contact": "📱 Share contact",
     "phone_invalid": "That doesn't look like a phone number. Please use a format like +998901234567.",
+    "ask_birth_date": "Enter your date of birth as DD.MM.YYYY (e.g. 15.03.2002):",
+    "birth_date_invalid": "That date isn't valid. Please use the DD.MM.YYYY format, e.g. 15.03.2002.",
+    "ask_workplace": "Where do you study or work? Type the name of your university or organization:",
+    "workplace_invalid": "Please type the name of your university or workplace (up to 200 characters).",
+    "profile_update_intro": "Please add a couple of details about yourself — it takes a minute.",
+    "profile_reminder": "Hi! Please complete your profile in the bot: tap /start.",
     "registered": "Thank you, registration is complete ✅",
+    "profile_saved": "Thank you, your details are saved ✅",
     "subscribe_prompt": "Please subscribe to the Global Shapers Tashkent Hub channel, then tap “I subscribed”.",
     "btn_open_channel": "📢 Open channel",
     "btn_i_subscribed": "✅ I subscribed",
     "not_subscribed": "It looks like you haven't subscribed yet. Subscribe and tap the button again.",
-    "invite_ready": (
-        "Great, your subscription is confirmed! 🎉\n\n"
-        "Here is your unique link:\n{link}\n\n"
-        "To receive the link to the private channel, invite {goal} friends to join "
-        "the channel via your unique link."
-    ),
-    "referral_progress": "🎉 A new member joined via your link! Progress: {count} of {goal}.",
-    "goal_reached": (
-        "Congratulations! 🏆 {goal} people have joined via your link.\n\n"
-        "Here is your personal link to the private channel:\n{link}"
-    ),
-    "menu_header": "Welcome back, {name}!",
-    "menu_progress": (
-        "Your unique link:\n{link}\n\n"
-        "Invited: {count} of {goal}. Invite more friends to unlock the private channel."
-    ),
-    "menu_done": "You have access to the private channel ✅\nYour link:\n{link}",
+    "subscribed_ok": "Subscription confirmed 🎉",
+    "menu_header": "{name}, choose a section in the menu below 👇",
+    "btn_projects": "📂 Projects",
+    "btn_contests": "🏆 Contests",
     "btn_change_language": "🌐 Change language",
     "language_changed": "Language changed ✅",
+    "btn_back": "⬅️ Back",
+    "btn_cancel": "✖️ Cancel",
+    # Projects
+    "projects_list": "Active projects — pick one to learn more:",
+    "projects_empty": "There are no active projects right now. Check back later!",
+    "btn_apply": "✅ Register",
+    "btn_applied": "✅ You're registered",
+    "already_applied": "You are already registered for this project.",
+    "project_unavailable": "This project is no longer available.",
+    "ask_cv": "Send your CV as a file — for example, PDF or DOC.",
+    "cv_invalid": "Please send your CV as a file (document).",
+    "ask_letter": "Write your motivation letter in one message or send it as a file.",
+    "letter_invalid": "Send your motivation letter as text (30 to 3500 characters) or as a file.",
+    "application_cancelled": "Project registration cancelled.",
+    "application_done": "Done! You are registered for “{title}” ✅\nWe'll get in touch with you.",
+    # Contests
+    "contests_list": "Active contests — pick one to learn more:",
+    "contests_empty": "There are no active contests right now. Check back later!",
+    "contest_ends": "⏳ Ends: {date} (Tashkent time)",
+    "contest_how": "Tap “Get link” and invite friends to the channel with it. Whoever invites the most people wins!",
+    "contest_your_link": "🔗 Your invite link:\n{link}\n\n👥 Invited by you: {count}",
+    "btn_get_link": "🔗 Get link",
+    "btn_share": "📤 Share link",
+    "contest_unavailable": "This contest has already ended.",
+    "contest_link_error": "Couldn't create a link. Please try again later.",
 }

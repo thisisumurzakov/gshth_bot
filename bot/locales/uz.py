@@ -4,28 +4,47 @@ TEXTS = {
     "ask_phone": "Telefon raqamingizni quyidagi tugma orqali yuboring yoki qo'lda kiriting (masalan, +998901234567).",
     "btn_share_contact": "📱 Kontaktni ulashish",
     "phone_invalid": "Telefon raqami aniqlanmadi. Uni +998901234567 ko'rinishida kiriting.",
+    "ask_birth_date": "Tug'ilgan sanangizni KK.OO.YYYY ko'rinishida kiriting (masalan, 15.03.2002):",
+    "birth_date_invalid": "Sana aniqlanmadi. Uni KK.OO.YYYY ko'rinishida kiriting, masalan 15.03.2002.",
+    "ask_workplace": "Qayerda o'qiysiz yoki ishlaysiz? Universitet yoki tashkilot nomini yozing:",
+    "workplace_invalid": "Iltimos, universitet yoki ish joyingiz nomini yozing (200 belgigacha).",
+    "profile_update_intro": "Iltimos, o'zingiz haqingizdagi ma'lumotlarni to'ldiring — bu bir daqiqa vaqt oladi.",
+    "profile_reminder": "Assalomu alaykum! Iltimos, botda ma'lumotlaringizni to'ldiring: /start ni bosing.",
     "registered": "Rahmat, ro'yxatdan o'tish yakunlandi ✅",
+    "profile_saved": "Rahmat, ma'lumotlaringiz saqlandi ✅",
     "subscribe_prompt": "Global Shapers Tashkent Hub kanaliga obuna bo'ling, so'ng «Obuna bo'ldim» tugmasini bosing.",
     "btn_open_channel": "📢 Kanalni ochish",
     "btn_i_subscribed": "✅ Obuna bo'ldim",
     "not_subscribed": "Siz hali kanalga obuna bo'lmaganga o'xshaysiz. Obuna bo'lib, tugmani yana bosing.",
-    "invite_ready": (
-        "Ajoyib, obuna tasdiqlandi! 🎉\n\n"
-        "Sizning shaxsiy havolangiz:\n{link}\n\n"
-        "Yopiq kanalga havola olish uchun {goal} do'stingizni ushbu havola orqali "
-        "kanalga qo'shilishga taklif qiling."
-    ),
-    "referral_progress": "🎉 Havolangiz orqali yangi ishtirokchi qo'shildi! Jarayon: {goal} tadan {count} tasi.",
-    "goal_reached": (
-        "Tabriklaymiz! 🏆 Havolangiz orqali {goal} kishi qo'shildi.\n\n"
-        "Yopiq kanalga kirish uchun shaxsiy havolangiz:\n{link}"
-    ),
-    "menu_header": "Qaytganingiz bilan, {name}!",
-    "menu_progress": (
-        "Sizning shaxsiy havolangiz:\n{link}\n\n"
-        "Taklif qilinganlar: {goal} tadan {count} tasi. Yopiq kanalga kirish uchun yana do'stlaringizni taklif qiling."
-    ),
-    "menu_done": "Sizda yopiq kanalga kirish huquqi bor ✅\nKirish havolangiz:\n{link}",
+    "subscribed_ok": "Obuna tasdiqlandi 🎉",
+    "menu_header": "{name}, quyidagi menyudan bo'limni tanlang 👇",
+    "btn_projects": "📂 Loyiha",
+    "btn_contests": "🏆 Konkurs",
     "btn_change_language": "🌐 Tilni o'zgartirish",
     "language_changed": "Til o'zgartirildi ✅",
+    "btn_back": "⬅️ Orqaga",
+    "btn_cancel": "✖️ Bekor qilish",
+    # Loyihalar
+    "projects_list": "Faol loyihalar — batafsil ma'lumot uchun birini tanlang:",
+    "projects_empty": "Hozircha faol loyihalar yo'q. Keyinroq qarab ko'ring!",
+    "btn_apply": "✅ Ro'yxatdan o'tish",
+    "btn_applied": "✅ Siz ro'yxatdan o'tgansiz",
+    "already_applied": "Siz bu loyihaga allaqachon ro'yxatdan o'tgansiz.",
+    "project_unavailable": "Bu loyiha endi mavjud emas.",
+    "ask_cv": "Rezyumeingizni (CV) fayl ko'rinishida yuboring — masalan, PDF yoki DOC.",
+    "cv_invalid": "Iltimos, rezyumeni aynan fayl (hujjat) ko'rinishida yuboring.",
+    "ask_letter": "Motivatsion xatni bitta xabarda yozing yoki fayl ko'rinishida yuboring.",
+    "letter_invalid": "Motivatsion xatni matn (30 dan 3500 belgigacha) yoki fayl ko'rinishida yuboring.",
+    "application_cancelled": "Loyihaga ro'yxatdan o'tish bekor qilindi.",
+    "application_done": "Tayyor! Siz «{title}» loyihasiga ro'yxatdan o'tdingiz ✅\nSiz bilan bog'lanamiz.",
+    # Konkurslar
+    "contests_list": "Faol konkurslar — batafsil ma'lumot uchun birini tanlang:",
+    "contests_empty": "Hozircha faol konkurslar yo'q. Keyinroq qarab ko'ring!",
+    "contest_ends": "⏳ Tugash vaqti: {date} (Toshkent vaqti)",
+    "contest_how": "«Havolani olish» tugmasini bosing va do'stlaringizni shu havola orqali kanalga taklif qiling. Eng ko'p odam taklif qilgan g'olib bo'ladi!",
+    "contest_your_link": "🔗 Taklif havolangiz:\n{link}\n\n👥 Siz taklif qilganlar: {count}",
+    "btn_get_link": "🔗 Havolani olish",
+    "btn_share": "📤 Havolani ulashish",
+    "contest_unavailable": "Bu konkurs allaqachon yakunlangan.",
+    "contest_link_error": "Havola yaratib bo'lmadi. Keyinroq urinib ko'ring.",
 }
