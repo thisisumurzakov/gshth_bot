@@ -175,3 +175,40 @@ async def test_admin_edits_contest_and_extends_links(harness, data, session_fact
     calls = await h.press(ADMIN_ID, f"au:11:c{contest.id}")
     card = next(c for c in calls if isinstance(c, methods.EditMessageText))
     assert ("⬅️ К конкурсу", f"ac:{contest.id}") in buttons(card.reply_markup)
+
+
+async def test_usernames_are_tracked_and_shown(harness, data, session_factory):
+    h = harness
+
+    # Username подхватывается при любом обращении к боту, в том числе у старых пользователей.
+    h.usernames[11] = "anvar_k"
+    await h.send(11, "/start")
+
+    calls = await h.send(ADMIN_ID, "/users")
+    assert ("Anvar Karimov (@anvar_k) — +998901234567", "au:11:u") in buttons(
+        calls[-1].reply_markup
+    )
+    calls = await h.send(ADMIN_ID, "/users @anvar")
+    assert "Найдено по «@anvar»: 1" in calls[-1].text
+
+    calls = await h.press(ADMIN_ID, "au:11:u")
+    card = next(c for c in calls if isinstance(c, methods.EditMessageText))
+    assert "@anvar_k" in card.text
+
+    calls = await h.press(ADMIN_ID, "au_csv")
+    csv = next(c for c in calls if isinstance(c, methods.SendDocument))
+    assert "@anvar_k" in csv.document.data.decode("utf-8-sig")
+
+    assert "Anvar Karimov (@anvar_k)" in sent_texts(await h.send(ADMIN_ID, "/message @ANVAR_K"))
+    await h.send(ADMIN_ID, "/cancel")
+    assert "не найден" in sent_texts(await h.send(ADMIN_ID, "/message abc"))
+
+    # Сменил username — обновляем; убрал — очищаем.
+    h.usernames[11] = "anvar_new"
+    await h.send(11, "/start")
+    async with session_factory() as s:
+        assert (await repo.get_user(s, 11)).username == "anvar_new"
+    del h.usernames[11]
+    await h.send(11, "/start")
+    async with session_factory() as s:
+        assert (await repo.get_user(s, 11)).username is None

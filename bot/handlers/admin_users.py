@@ -59,7 +59,7 @@ async def users_page(
         f"Найдено по «{query}»: {total}" if query else f"Зарегистрировано: {total}"
     )
     rows: list = [
-        (f"{user.full_name} — {user.phone}", f"au:{user.tg_id}:u") for user in users
+        (f"{user.display_name} — {user.phone}", f"au:{user.tg_id}:u") for user in users
     ]
     nav = []
     if offset:
@@ -70,7 +70,7 @@ async def users_page(
         rows.append(nav)
     rows.append(("📥 Все пользователи (CSV)", "au_csv"))
     shown = f"{offset + 1}–{offset + len(users)} из {total}"
-    return f"{header}\n{shown}\n\nПоиск: /users Иванов или /users 901234567", _kb(*rows)
+    return f"{header}\n{shown}\n\nПоиск: /users Иванов, /users @username или /users 901234567", _kb(*rows)
 
 
 async def user_card(
@@ -215,7 +215,7 @@ async def cb_user_dm(
     await state.set_state(AdminStates.direct_content)
     await state.update_data(target_tg_id=user.tg_id)
     await callback.message.answer(
-        f"Получатель: {user.full_name} ({user.phone}).\n"
+        f"Получатель: {user.display_name}, {user.phone}.\n"
         "Пришлите сообщение — я отправлю его этому пользователю. /cancel — отмена."
     )
 

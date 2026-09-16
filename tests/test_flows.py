@@ -39,6 +39,7 @@ async def test_bot_flows(harness, session_factory):
         assert user.workplace == "Westminster International University"
 
     # --- Новый пользователь: полная регистрация, затем подписка → меню. ---
+    h.usernames[2] = "john_smith"
     out = sent_texts(await h.send(2, "/start"))
     assert "Choose a language" in out
     out = sent_texts(await h.press(2, "setlang:en"))
@@ -59,6 +60,7 @@ async def test_bot_flows(harness, session_factory):
     async with session_factory() as s:
         user = await repo.get_user(s, 2)
         assert user.phone == "+998901234567" and user.profile_complete
+        assert user.username == "john_smith"
         assert user.subscribed_at is not None
 
     # --- Проект с CV и письмом. ---

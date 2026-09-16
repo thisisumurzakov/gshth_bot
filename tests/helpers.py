@@ -70,9 +70,13 @@ class Harness:
         self.dp = build_dispatcher(session_factory)
         self._update_ids = count(1)
         self._message_ids = count(1)
+        # Telegram username отправителя по tg_id; отсутствие ключа — username не задан.
+        self.usernames: dict[int, str] = {}
 
     def _user(self, tg_id):
-        return TgUser(id=tg_id, is_bot=False, first_name="Test")
+        return TgUser(
+            id=tg_id, is_bot=False, first_name="Test", username=self.usernames.get(tg_id)
+        )
 
     def _message(self, tg_id, **fields):
         return Message(

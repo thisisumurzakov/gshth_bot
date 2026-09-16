@@ -23,6 +23,8 @@ async def get_user(session: AsyncSession, tg_id: int) -> User | None:
 
 async def get_user_by_phone(session: AsyncSession, phone: str) -> User | None:
     digits = "".join(ch for ch in phone if ch.isdigit())
+    if not digits:
+        return None  # иначе пустая строка «совпала» бы с любым номером
     result = await session.execute(select(User))
     for user in result.scalars():
         if "".join(ch for ch in user.phone if ch.isdigit()).endswith(digits):
@@ -30,10 +32,24 @@ async def get_user_by_phone(session: AsyncSession, phone: str) -> User | None:
     return None
 
 
+async def get_user_by_username(session: AsyncSession, username: str) -> User | None:
+    result = await session.execute(
+        select(User).where(func.lower(User.username) == username.lstrip("@").lower())
+    )
+    return result.scalars().first()
+
+
 async def create_user(
-    session: AsyncSession, tg_id: int, full_name: str, phone: str, language: str
+    session: AsyncSession,
+    tg_id: int,
+    full_name: str,
+    phone: str,
+    language: str,
+    username: str | None = None,
 ) -> User:
-    user = User(tg_id=tg_id, full_name=full_name, phone=phone, language=language)
+    user = User(
+        tg_id=tg_id, full_name=full_name, phone=phone, language=language, username=username
+    )
     session.add(user)
     await session.commit()
     return user
@@ -60,11 +76,12 @@ async def users_with_incomplete_profile(session: AsyncSession) -> list[User]:
 
 
 def _user_search(query: str | None):
-    """Поиск по части имени или по цифрам телефона."""
+    """Поиск по части имени, username или по цифрам телефона."""
     if not query:
         return []
     digits = "".join(ch for ch in query if ch.isdigit())
-    conditions = [User.full_name.ilike(f"%{query.strip()}%")]
+    text = query.strip().lstrip("@")
+    conditions = [User.full_name.ilike(f"%{text}%"), User.username.ilike(f"%{text}%")]
     if digits:
         conditions.append(User.phone.like(f"%{digits}%"))
     return [or_(*conditions)]

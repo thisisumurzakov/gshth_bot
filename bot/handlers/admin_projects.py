@@ -271,7 +271,7 @@ async def cb_project_applications(callback: CallbackQuery, session: AsyncSession
     await callback.answer()
     page = applications[offset : offset + PAGE_SIZE]
     rows: list = [
-        (f"{user.full_name} — {user.phone}", f"au:{user.tg_id}:p{project_id}")
+        (f"{user.display_name} — {user.phone}", f"au:{user.tg_id}:p{project_id}")
         for _, user in page
     ]
     nav = []
@@ -298,7 +298,7 @@ async def cb_project_files(callback: CallbackQuery, session: AsyncSession) -> No
         await callback.answer("Проект не найден", show_alert=True)
         return
     files = [
-        (file_id, f"{label} — {user.full_name} ({user.phone})")
+        (file_id, f"{label} — {user.display_name}, {user.phone}")
         for app, user in await repo.project_applications(session, project.id)
         for file_id, label in (
             (app.cv_file_id, "CV"),

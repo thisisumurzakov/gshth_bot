@@ -41,11 +41,18 @@ class User(Base):
     tg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
     full_name: Mapped[str] = mapped_column(String(255))
     phone: Mapped[str] = mapped_column(String(32))
+    # Username из Telegram: необязателен и может меняться, обновляется при каждом обращении.
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(5), default="ru")
     birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     workplace: Mapped[str | None] = mapped_column(String(255), nullable=True)
     subscribed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow)
+
+    @property
+    def display_name(self) -> str:
+        """«Имя (@username)» — для админских списков и уведомлений."""
+        return f"{self.full_name} (@{self.username})" if self.username else self.full_name
 
     @property
     def profile_complete(self) -> bool:

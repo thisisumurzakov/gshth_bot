@@ -150,6 +150,7 @@ async def process_phone(
             full_name=data["full_name"],
             phone=phone,
             language=lang,
+            username=message.from_user.username,
         )
     await state.set_state(Registration.birth_date)
     await message.answer(t(lang, "ask_birth_date"), reply_markup=ReplyKeyboardRemove())

@@ -38,6 +38,7 @@ async def test_legacy_database_is_upgraded(tmp_path):
 
     async with make_session_factory(engine)() as session:
         subscribed = await repo.get_user(session, 1)
+        assert subscribed.username is None
         assert subscribed.subscribed_at == datetime(2026, 9, 2, 10, tzinfo=timezone.utc)
         assert not subscribed.profile_complete
         assert (await repo.get_user(session, 2)).subscribed_at is None

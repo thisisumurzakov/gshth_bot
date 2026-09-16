@@ -19,7 +19,8 @@ MESSAGE_LIMIT = 4096
 def user_summary_html(user: User) -> str:
     lines = [
         f'👤 <a href="tg://user?id={user.tg_id}">{escape(user.full_name)}</a>'
-        f" (ID {user.tg_id})",
+        + (f" @{escape(user.username)}" if user.username else "")
+        + f" (ID {user.tg_id})",
         f"📱 {escape(user.phone)}",
     ]
     if user.birth_date:
@@ -63,13 +64,13 @@ async def notify_new_application(
                 )
             if application.cv_file_id:
                 await bot.send_document(
-                    chat_id, application.cv_file_id, caption=f"CV — {user.full_name}"
+                    chat_id, application.cv_file_id, caption=f"CV — {user.display_name}"
                 )
             if application.letter_file_id:
                 await bot.send_document(
                     chat_id,
                     application.letter_file_id,
-                    caption=f"Мотивационное письмо — {user.full_name}",
+                    caption=f"Мотивационное письмо — {user.display_name}",
                 )
         except TelegramAPIError:
             logger.exception("Не удалось отправить заявку в чат %s", chat_id)
@@ -88,13 +89,14 @@ def _user_columns(user: User) -> list:
     return [
         user.tg_id,
         user.full_name,
+        f"@{user.username}" if user.username else "",
         user.phone,
         format_date(user.birth_date) if user.birth_date else "",
         user.workplace or "",
     ]
 
 
-USER_HEADER = ["tg_id", "Имя", "Телефон", "Дата рождения", "Место учёбы/работы"]
+USER_HEADER = ["tg_id", "Имя", "Username", "Телефон", "Дата рождения", "Место учёбы/работы"]
 
 
 def users_csv(users: list[User]) -> BufferedInputFile:

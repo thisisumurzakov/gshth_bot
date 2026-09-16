@@ -25,6 +25,7 @@ def make_session_factory(engine) -> async_sessionmaker[AsyncSession]:
 # Колонки, добавленные в users после первой версии бота. create_all не меняет
 # существующие таблицы, поэтому на старой базе дописываем их сами.
 _NEW_USER_COLUMNS = {
+    "username": "VARCHAR(64)",
     "birth_date": "DATE",
     "workplace": "VARCHAR(255)",
     "subscribed_at": "DATETIME",

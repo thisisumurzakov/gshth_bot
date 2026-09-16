@@ -240,7 +240,8 @@ async def _contest_card(
         lines.append(f"\n<b>Топ-{TOP_SIZE}</b> (вышедшие из канала не считаются):")
         lines += [
             f'{place}. <a href="tg://user?id={user.tg_id}">{escape(user.full_name)}</a>'
-            f" ({escape(user.phone)}) — {count}"
+            + (f" @{escape(user.username)}" if user.username else "")
+            + f" ({escape(user.phone)}) — {count}"
             for place, (user, count) in enumerate(ranking, start=1)
         ]
     kb = _kb(
@@ -322,7 +323,7 @@ async def cb_contest_participants(callback: CallbackQuery, session: AsyncSession
         return
     await callback.answer()
     rows: list = [
-        (f"{user.full_name} — приглашено {count}", f"au:{user.tg_id}:c{contest_id}")
+        (f"{user.display_name} — приглашено {count}", f"au:{user.tg_id}:c{contest_id}")
         for user, count in page
     ]
     nav = []

@@ -48,13 +48,13 @@ async def cmd_admin(message: Message) -> None:
     await message.answer(
         "Админ-команды:\n"
         "/users — зарегистрированные пользователи, их заявки и файлы "
-        "(поиск: /users Иванов или /users 901234567)\n"
+        "(поиск: /users Иванов, /users @username или /users 901234567)\n"
         "/new_project — создать проект\n"
         "/projects — проекты: редактирование, заявки, выгрузка\n"
         "/new_contest — создать конкурс\n"
         "/contests — конкурсы: итоги, редактирование, выгрузка\n"
         "/broadcast — рассылка всем пользователям\n"
-        "/message <tg_id или телефон> — сообщение пользователю\n"
+        "/message <tg_id, @username или телефон> — сообщение пользователю\n"
         "/ask_profile — напомнить дополнить профиль тем, кто не указал новые данные\n"
         "/stats — статистика\n"
         "/cancel — отменить текущую операцию"
@@ -133,21 +133,23 @@ async def cmd_message(
     session: AsyncSession,
 ) -> None:
     if not command.args:
-        await message.answer("Использование: /message <tg_id или телефон>")
+        await message.answer("Использование: /message <tg_id, @username или телефон>")
         return
     arg = command.args.strip()
     target = None
-    if arg.lstrip("+").isdigit() and not arg.startswith("+"):
+    if arg.startswith("@"):
+        target = await repo.get_user_by_username(session, arg)
+    elif arg.lstrip("+").isdigit() and not arg.startswith("+"):
         target = await repo.get_user(session, int(arg))
-    if target is None:
+    if target is None and not arg.startswith("@"):
         target = await repo.get_user_by_phone(session, arg)
     if target is None:
-        await message.answer("Пользователь не найден (ни по ID, ни по телефону).")
+        await message.answer("Пользователь не найден (ни по ID, ни по username, ни по телефону).")
         return
     await state.set_state(AdminStates.direct_content)
     await state.update_data(target_tg_id=target.tg_id)
     await message.answer(
-        f"Получатель: {target.full_name} ({target.phone}).\n"
+        f"Получатель: {target.display_name}, {target.phone}.\n"
         "Пришлите сообщение — я отправлю его этому пользователю. /cancel — отмена."
     )
 
