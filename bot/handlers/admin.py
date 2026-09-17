@@ -1,4 +1,6 @@
 from aiogram import F, Router
+from aiogram.enums import ChatMemberStatus, ChatType
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command, CommandObject
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -56,9 +58,68 @@ async def cmd_admin(message: Message) -> None:
         "/broadcast — рассылка всем пользователям\n"
         "/message <tg_id, @username или телефон> — сообщение пользователю\n"
         "/ask_profile — напомнить дополнить профиль тем, кто не указал новые данные\n"
+        "/check_chat — проверить, может ли бот отправлять заявки и файлы в чат заявок\n"
         "/stats — статистика\n"
         "/cancel — отменить текущую операцию"
     )
+
+
+@router.message(Command("check_chat"))
+async def cmd_check_chat(message: Message) -> None:
+    """Проверяет, может ли бот публиковать заявки (текст и файлы) в чат заявок."""
+    chat_id = get_settings().applications_chat_id
+    if not chat_id:
+        await message.answer(
+            "APPLICATIONS_CHAT_ID не задан — заявки приходят админам в личку."
+        )
+        return
+    bot = message.bot
+    try:
+        chat = await bot.get_chat(chat_id)
+        me = await bot.get_chat_member(chat_id, bot.id)
+    except TelegramAPIError as e:
+        await message.answer(
+            f"❌ Чат {chat_id} недоступен боту: {e.message}\n"
+            "Проверьте ID и что бот добавлен в чат."
+        )
+        return
+
+    status = {
+        ChatMemberStatus.ADMINISTRATOR: "администратор",
+        ChatMemberStatus.MEMBER: "участник, не администратор",
+        ChatMemberStatus.RESTRICTED: "участник с ограничениями",
+        ChatMemberStatus.LEFT: "не состоит в чате",
+        ChatMemberStatus.KICKED: "удалён из чата",
+    }.get(me.status, str(me.status))
+    lines = [f"Чат: {chat.title}, статус бота: {status}"]
+    if chat.type == ChatType.CHANNEL:
+        ok = me.status == ChatMemberStatus.ADMINISTRATOR and me.can_post_messages
+        hint = "Сделайте бота администратором канала с правом «Публикация сообщений»."
+    elif me.status == ChatMemberStatus.ADMINISTRATOR:
+        ok, hint = True, ""
+    elif me.status == ChatMemberStatus.RESTRICTED:
+        ok = me.can_send_messages and me.can_send_documents
+        hint = "Сделайте бота администратором группы или снимите ограничение на файлы."
+    else:
+        permissions = chat.permissions
+        ok = me.status == ChatMemberStatus.MEMBER and (
+            permissions is None
+            or (permissions.can_send_messages and permissions.can_send_documents)
+        )
+        hint = (
+            "В группе участникам запрещено отправлять сообщения или файлы — "
+            "сделайте бота администратором группы."
+        )
+    try:
+        await bot.send_message(chat_id, "✅ Проверка связи: бот может писать в этот чат.")
+        lines.append("Тестовое сообщение отправлено.")
+    except TelegramAPIError as e:
+        ok = False
+        lines.append(f"Тестовое сообщение не отправлено: {e.message}")
+    lines.append(
+        "✅ Права в порядке: заявки и файлы будут приходить." if ok else f"❌ {hint}"
+    )
+    await message.answer("\n".join(lines))
 
 
 @router.message(Command("stats"))

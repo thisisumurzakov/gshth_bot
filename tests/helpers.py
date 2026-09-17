@@ -6,8 +6,10 @@ from itertools import count
 from aiogram import Bot, methods
 from aiogram.client.session.base import BaseSession
 from aiogram.types import (
+    AcceptedGiftTypes,
     CallbackQuery,
     Chat,
+    ChatFullInfo,
     ChatInviteLink,
     ChatMemberLeft,
     ChatMemberMember,
@@ -21,6 +23,7 @@ from bot.main import build_dispatcher
 
 ADMIN_ID = 999
 CHANNEL_ID = -100777
+BOT_USERNAME = "gsth_test_bot"
 
 
 class FakeSession(BaseSession):
@@ -30,9 +33,35 @@ class FakeSession(BaseSession):
         super().__init__()
         self.calls: list[methods.TelegramMethod] = []
         self._ids = count(1000)
+        # Username, который getChat вернёт для пользователя (как настоящий Telegram).
+        self.chat_usernames: dict[int, str | None] = {}
+        self.chat_types: dict[int, str] = {}
+        # Вернуть исключение, чтобы имитировать отказ Telegram на конкретный вызов.
+        self.fail = lambda method: None
 
     async def make_request(self, bot, method, timeout=None):
         self.calls.append(method)
+        error = self.fail(method)
+        if error is not None:
+            raise error
+        if isinstance(method, methods.GetMe):
+            return TgUser(id=42, is_bot=True, first_name="Bot", username=BOT_USERNAME)
+        if isinstance(method, methods.GetChat):
+            return ChatFullInfo(
+                id=method.chat_id,
+                type=self.chat_types.get(method.chat_id, "private"),
+                title="Chat",
+                username=self.chat_usernames.get(method.chat_id),
+                accent_color_id=0,
+                max_reaction_count=0,
+                accepted_gift_types=AcceptedGiftTypes(
+                    unlimited_gifts=False,
+                    limited_gifts=False,
+                    unique_gifts=False,
+                    premium_subscription=False,
+                    gifts_from_channels=False,
+                ),
+            )
         if isinstance(method, (methods.SendMessage, methods.SendPhoto, methods.SendDocument)):
             return Message(
                 message_id=next(self._ids),

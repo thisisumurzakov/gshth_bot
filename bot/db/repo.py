@@ -124,6 +124,26 @@ async def user_applications(
     return [(app, project) for app, project in result.all()]
 
 
+async def applications_by_user(
+    session: AsyncSession,
+) -> dict[int, list[tuple[ProjectApplication, Project]]]:
+    result = await session.execute(
+        select(ProjectApplication, Project)
+        .join(Project, Project.id == ProjectApplication.project_id)
+        .order_by(ProjectApplication.created_at)
+    )
+    grouped: dict[int, list[tuple[ProjectApplication, Project]]] = {}
+    for app, project in result.all():
+        grouped.setdefault(app.tg_id, []).append((app, project))
+    return grouped
+
+
+async def users_missing_username(session: AsyncSession) -> list[User]:
+    """NULL — username ещё не проверяли; пустая строка — у человека его нет."""
+    result = await session.execute(select(User).where(User.username.is_(None)))
+    return list(result.scalars())
+
+
 async def stats(session: AsyncSession) -> tuple[int, int, int]:
     """(всего, подтвердили подписку, заполнили профиль)."""
 

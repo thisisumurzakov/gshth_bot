@@ -37,9 +37,10 @@ class UserMiddleware(BaseMiddleware):
         session = data["session"]
         from_user = getattr(event, "from_user", None)
         user = await repo.get_user(session, from_user.id) if from_user else None
-        if user is not None and user.username != from_user.username:
-            # Пишем в базу только когда username появился или сменился.
-            user.username = from_user.username
+        # Пустая строка — «username нет»; NULL — «ещё не проверяли».
+        if user is not None and user.username != (from_user.username or ""):
+            # Пишем в базу только когда username появился, сменился или пропал.
+            user.username = from_user.username or ""
             await session.commit()
         data["user"] = user
         data["lang"] = user.language if user else None

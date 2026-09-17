@@ -197,7 +197,8 @@ async def test_usernames_are_tracked_and_shown(harness, data, session_factory):
 
     calls = await h.press(ADMIN_ID, "au_csv")
     csv = next(c for c in calls if isinstance(c, methods.SendDocument))
-    assert "@anvar_k" in csv.document.data.decode("utf-8-sig")
+    # В CSV без «@», иначе Excel примет ячейку за формулу.
+    assert ",anvar_k," in csv.document.data.decode("utf-8-sig")
 
     assert "Anvar Karimov (@anvar_k)" in sent_texts(await h.send(ADMIN_ID, "/message @ANVAR_K"))
     await h.send(ADMIN_ID, "/cancel")
@@ -211,4 +212,4 @@ async def test_usernames_are_tracked_and_shown(harness, data, session_factory):
     del h.usernames[11]
     await h.send(11, "/start")
     async with session_factory() as s:
-        assert (await repo.get_user(s, 11)).username is None
+        assert (await repo.get_user(s, 11)).username == ""

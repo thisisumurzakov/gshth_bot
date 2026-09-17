@@ -249,9 +249,12 @@ async def cb_project_csv(callback: CallbackQuery, session: AsyncSession) -> None
         await callback.answer("Заявок пока нет", show_alert=True)
         return
     await callback.answer()
+    bot_username = (await callback.bot.me()).username
     await callback.message.answer_document(
-        applications_csv(project, rows),
-        caption=f"Заявки на «{project.title}»: {len(rows)}",
+        applications_csv(project, rows, bot_username),
+        caption=f"Заявки на «{project.title}»: {len(rows)}\n"
+        "Ссылки в колонках CV и «Мотивационное письмо» открывайте из аккаунта "
+        "админа — бот пришлёт файл.",
     )
 
 

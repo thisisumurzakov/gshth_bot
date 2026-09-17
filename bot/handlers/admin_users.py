@@ -4,7 +4,7 @@ import asyncio
 from html import escape
 
 from aiogram import F, Router
-from aiogram.filters import Command, CommandObject
+from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     CallbackQuery,
@@ -27,6 +27,8 @@ router.message.filter(F.from_user.id.in_(get_settings().admin_id_list))
 router.callback_query.filter(F.from_user.id.in_(get_settings().admin_id_list))
 
 PAGE_SIZE = 10
+# Deep link на файл заявки из CSV: cv|letter _ id проекта _ tg_id.
+FILE_LINK_RE = r"^(cv|letter)_(\d+)_(\d+)$"
 QUERY_MAX_LEN = 20  # callback_data ограничена 64 байтами
 
 
@@ -227,6 +229,46 @@ async def cb_users_csv(callback: CallbackQuery, session: AsyncSession) -> None:
         await callback.answer("Пользователей нет", show_alert=True)
         return
     await callback.answer()
+    applications = await repo.applications_by_user(session)
+    bot_username = (await callback.bot.me()).username
     await callback.message.answer_document(
-        users_csv(users), caption=f"Зарегистрированные пользователи: {len(users)}"
+        users_csv(users, applications, bot_username),
+        caption=f"Зарегистрированные пользователи: {len(users)}\n"
+        "Ссылки в колонках CV и «Мотивационное письмо» открывайте из аккаунта "
+        "админа — бот пришлёт файл.",
     )
+
+
+@router.message(CommandStart(deep_link=True, magic=F.args.regexp(FILE_LINK_RE)))
+async def open_file_link(
+    message: Message, command: CommandObject, session: AsyncSession
+) -> None:
+    """Переход по ссылке из CSV: t.me/<бот>?start=cv_<проект>_<пользователь>.
+
+    Роутер админский, поэтому файл получает только админ; у остальных та же ссылка
+    работает как обычный /start.
+    """
+    kind, project_id, tg_id = command.magic_result.groups()
+    application = await repo.get_application(session, int(project_id), int(tg_id))
+    project = await repo.get_project(session, int(project_id))
+    user = await repo.get_user(session, int(tg_id))
+    if application is None or project is None or user is None:
+        await message.answer("Заявка не найдена.")
+        return
+    caption = f"{user.display_name} — {project.title}"
+    if kind == "cv":
+        if application.cv_file_id is None:
+            await message.answer("В этой заявке нет CV.")
+            return
+        await message.answer_document(application.cv_file_id, caption=f"CV: {caption}")
+    elif application.letter_file_id:
+        await message.answer_document(
+            application.letter_file_id, caption=f"Мотивационное письмо: {caption}"
+        )
+    elif application.letter_text:
+        await message.answer(
+            f"✉️ <b>{escape(caption)}</b>\n\n{escape(application.letter_text)}",
+            parse_mode="HTML",
+        )
+    else:
+        await message.answer("В этой заявке нет мотивационного письма.")

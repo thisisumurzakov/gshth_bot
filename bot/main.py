@@ -19,6 +19,7 @@ from bot.handlers import (
     subscription,
 )
 from bot.middlewares.db import DbSessionMiddleware, UserMiddleware
+from bot.services.usernames import backfill_usernames
 
 
 async def main() -> None:
@@ -30,15 +31,22 @@ async def main() -> None:
 
     engine = make_engine(settings.db_path)
     await create_schema(engine)
-    dp = build_dispatcher(make_session_factory(engine))
+    session_factory = make_session_factory(engine)
+    dp = build_dispatcher(session_factory)
     bot = Bot(token=settings.bot_token)
+
+    # В фоне, чтобы не задерживать старт: getChat идёт по одному пользователю с паузой.
+    backfill = asyncio.create_task(backfill_usernames(bot, session_factory))
 
     # chat_member обязателен: без него Telegram не присылает события вступления
     # в каналы конкурсов.
     await bot.delete_webhook(drop_pending_updates=False)
-    await dp.start_polling(
-        bot, allowed_updates=["message", "callback_query", "chat_member"]
-    )
+    try:
+        await dp.start_polling(
+            bot, allowed_updates=["message", "callback_query", "chat_member"]
+        )
+    finally:
+        backfill.cancel()
 
 
 def build_dispatcher(session_factory: async_sessionmaker[AsyncSession]) -> Dispatcher:

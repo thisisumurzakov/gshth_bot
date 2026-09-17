@@ -41,7 +41,8 @@ class User(Base):
     tg_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
     full_name: Mapped[str] = mapped_column(String(255))
     phone: Mapped[str] = mapped_column(String(32))
-    # Username из Telegram: необязателен и может меняться, обновляется при каждом обращении.
+    # Username из Telegram, обновляется при каждом обращении к боту.
+    # "" — username нет; NULL — ещё не проверяли (старые записи, см. backfill_usernames).
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(5), default="ru")
     birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)
